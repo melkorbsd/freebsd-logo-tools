@@ -35,61 +35,64 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
-int main(int argc,char** argv) {
-int width,height;
-int f = open("/tmp/t2.bmp",O_RDONLY);
-unsigned int filesize,byte;
-byte=0;
-unsigned int bitmapoffset;
-unsigned char * vt_logo_image;
-vt_logo_image = (unsigned char*)malloc(257*219*8+3*219);
-unsigned char* vt_logo_raw = (unsigned char*)malloc(257*219*8);
-read(f,vt_logo_image,54);
 
-lseek(f,0x2,SEEK_SET);
-read(f,&filesize,4);
-lseek(f,0x12,SEEK_SET);
-read(f,&width,4);
-lseek(f,0x16,SEEK_SET);
-read(f,&height,4);
-lseek(f,0x0a,SEEK_SET);
-read(f,&bitmapoffset,4);
-int bytes,padding, bpl, xi, yi;
-int i,offset;
-offset=0;
-i=0;
-int size=0;
-bpl = (width + 7) / 8;
-unsigned int  usedbytes[7300];
-lseek(f,bitmapoffset,SEEK_SET);
-read(f,vt_logo_image,filesize-bitmapoffset);
-close(f);
-bytes = filesize-bitmapoffset;
-int out = open("/tmp/t2.raw",O_WRONLY|O_CREAT,0666);
-bpl = (width + 7) / 8;
-for(yi=0;yi<height;yi++) {
-for(xi=0;xi<bpl;xi++) {
-i+=write(out,&vt_logo_image[offset],1);
-offset++;
+int main(int argc,char** argv) 
+{
+  int width, height;
+  int f = open("/tmp/t2.bmp", O_RDONLY);
+  unsigned int filesize, byte = 0
+  unsigned int bitmapoffset;
+  unsigned char * vt_logo_image;
+  
+  vt_logo_image = (unsigned char*) malloc(257*219*8+3*219);
+  unsigned char* vt_logo_raw = (unsigned char*) malloc(257*219*8);
+  
+  read(f, vt_logo_image, 54);
 
-}
-offset+=(xi % 4 ==0) ? 0 : 4-xi%4;
-}
-close(out);
-int in = open("/tmp/t2.raw",O_RDONLY);
-read(in,vt_logo_raw,height*width*8);
-for(yi=height-1;yi>=0;yi--) {
-for(xi=0;xi<bpl;xi++) {
-if(size==0)
-	printf("\t");
-printf("0x%.2x,",vt_logo_raw[yi*bpl+xi]);
-size++;
-if(size % 12==0){
-	printf("\n\t");
-}else if(size<height*bpl) {
-printf(" ");
-}
-}
-}
-close(in);
+  lseek(f, 0x2, SEEK_SET);
+  read(f, &filesize,4);
+  lseek(f, 0x12, SEEK_SET);
+  read(f, &width, 4);
+  lseek(f, 0x16, SEEK_SET);
+  read(f, &height, 4);
+  lseek(f, 0x0a, SEEK_SET);
+  read(f, &bitmapoffset, 4);
+
+  int bytes, padding, bpl, xi, yi;
+  int i = 0, offset = 0;
+  int size=0;
+  bpl = (width + 7) / 8;
+  unsigned int usedbytes[7300];
+
+  lseek(f, bitmapoffset, SEEK_SET);
+  read(f, vt_logo_image, filesize-bitmapoffset);
+  close(f);
+  
+  bytes = filesize-bitmapoffset;
+  int out = open("/tmp/t2.raw", O_WRONLY | O_CREAT, 0666);
+  bpl = (width + 7) / 8;
+  for(yi=0; yi<height; yi++) 
+  {
+    for(xi=0; xi<bpl; xi++) 
+    {
+      i += write(out, &vt_logo_image[offset], 1);
+      offset++;
+    }
+    offset += (xi % 4 ==0) ? 0 : 4-xi%4;
+  }
+  close(out);
+  int in = open("/tmp/t2.raw", O_RDONLY);
+  read(in, vt_logo_raw, height*width*8);
+  for(yi=height-1; yi>=0; yi--) 
+  {
+    for(xi=0; xi<bpl; xi++) 
+    {
+      if (size == 0) printf("\t");
+      printf("0x%.2x,", vt_logo_raw[yi*bpl+xi]);
+      size++;
+      if (size % 12 == 0) printf("\n\t");
+      else if (size < height*bpl) printf(" ");
+    }
+  }
+  close(in);
 }
